@@ -15,9 +15,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y meson ninja-build
-      - name: Install dependencies
-        run: python -m pip install pytest
+      - name: Install C dependencies
         run: |
           sudo apt-get install -y libglib2.0-dev libsoup2.4-dev libnftables-dev libsqlite3-dev libjansson-dev
+      - name: Install Python dependencies
+        run: python -m pip install pytest
       - name: Run tests
         run: make test
