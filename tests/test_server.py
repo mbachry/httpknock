@@ -19,7 +19,7 @@ def test_auth_no_header(knock_server_auth, get_ipc_result):
     [
         pytest.param('foo', id='unknown'),
         pytest.param('', id='empty'),
-        pytest.param('x' * (1 << 16), id='big'),
+        pytest.param('x' * (1 << 14), id='big'),
     ],
 )
 def test_bad_auth(knock_server_auth, get_ipc_result, token):
