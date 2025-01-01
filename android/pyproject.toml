@@ -1,0 +1,18 @@
+[project]
+name = "httpknock"
+
+[tool.flet]
+product = "httpknock"
+org = "org.mbachry"
+
+[tool.flet.app]
+module = "main"
+
+[tool.flet.splash]
+android = false
+
+[tool.flet.android]
+split_per_abi = true
+
+[tool.flet.flutter.pubspec.dependency_overrides]
+file_picker = "8.1.4"

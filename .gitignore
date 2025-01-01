@@ -1,0 +1,6 @@
+build/
+dist/
+.cache/
+result
+result
+.direnv/
