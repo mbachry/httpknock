@@ -11,8 +11,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.13
-      - uses: BSFishy/meson-build
-      - name: Install dependencies
+      - name: Install meson
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y meson ninja-build
+      - name: Install Python dependencies
         run: python -m pip install pytest
       - name: Run tests
         run: make test
