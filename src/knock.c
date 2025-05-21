@@ -215,6 +215,24 @@ err:
     return NULL;
 }
 
+static void update_last_login(sqlite3 *db, int64_t auth_id)
+{
+    sqlite3_stmt *update_stmt = NULL;
+    const char *update_sql = "UPDATE auth SET last_login = datetime('now', 'subsec') WHERE id = ?";
+    int res = sqlite3_prepare_v2(db, update_sql, -1, &update_stmt, NULL);
+    assert(res == SQLITE_OK);
+
+    res = sqlite3_bind_int64(update_stmt, 1, auth_id);
+    assert(res == SQLITE_OK);
+
+    res = sqlite3_step(update_stmt);
+    if (res != SQLITE_DONE) {
+        fprintf(stderr, "failed to update last_login: %s\n", sqlite3_errstr(res));
+    }
+
+    sqlite3_finalize(update_stmt);
+}
+
 static bool handle_auth(SoupServerMessage *msg, knock_context *ctx, char **auth_name)
 {
     assert(auth_name != NULL);
@@ -225,7 +243,7 @@ static bool handle_auth(SoupServerMessage *msg, knock_context *ctx, char **auth_
     if (!auth_key)
         return false;
 
-    const char *sql = "SELECT name FROM auth WHERE key = ? LIMIT 1";
+    const char *sql = "SELECT id, name FROM auth WHERE key = ? LIMIT 1";
     sqlite3_stmt *stmt = NULL;
     int res = sqlite3_prepare_v2(ctx->sqlite_db, sql, -1, &stmt, NULL);
     if (res) {
@@ -240,8 +258,10 @@ static bool handle_auth(SoupServerMessage *msg, knock_context *ctx, char **auth_
     res = sqlite3_step(stmt);
     if (res == SQLITE_ROW) {
         g_debug("authentication successful\n");
-        *auth_name = strdup((char *)sqlite3_column_text(stmt, 0));
+        int64_t auth_id = sqlite3_column_int64(stmt, 0);
+        *auth_name = strdup((char *)sqlite3_column_text(stmt, 1));
         retval = true;
+        update_last_login(ctx->sqlite_db, auth_id);
     } else if (res == SQLITE_DONE) {
         fprintf(stderr, "authentication failed: unknown key\n");
         soup_server_message_set_status(msg, SOUP_STATUS_UNAUTHORIZED, NULL);

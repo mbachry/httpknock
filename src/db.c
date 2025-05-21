@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-static const char *CREATE_SQL_TABLE =
-    "CREATE TABLE IF NOT EXISTS auth (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, key TEXT NOT NULL);";
+static const char *CREATE_SQL_TABLE = "CREATE TABLE IF NOT EXISTS auth (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT "
+                                      "NULL, key TEXT NOT NULL, last_login DATETIME);";
+
+static const char *ADD_COLUMN_SQL = "ALTER TABLE auth ADD COLUMN last_login DATETIME;";
 
 sqlite3 *open_sqlite_connection(const char *db_path)
 {
@@ -29,6 +31,24 @@ sqlite3 *open_sqlite_connection(const char *db_path)
         sqlite3_free(sql_error);
         sqlite3_close(db);
         return NULL;
+    }
+
+    /* migrate to "last_login" column if necessary */
+    sqlite3_stmt *stmt = NULL;
+    const char *check_column_sql = "SELECT 1 FROM pragma_table_info('auth') WHERE name='last_login';";
+    res = sqlite3_prepare_v2(db, check_column_sql, -1, &stmt, NULL);
+    assert(res == SQLITE_OK);
+    res = sqlite3_step(stmt);
+    bool column_exists = (res == SQLITE_ROW);
+    sqlite3_finalize(stmt);
+    if (!column_exists) {
+        if (sqlite3_exec(db, ADD_COLUMN_SQL, NULL, NULL, &sql_error)) {
+            assert(sql_error);
+            fprintf(stderr, "failed to add last_login column: %s\n", sql_error);
+            sqlite3_free(sql_error);
+            sqlite3_close(db);
+            return NULL;
+        }
     }
 
     return db;
