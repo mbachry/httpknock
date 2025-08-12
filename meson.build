@@ -1,8 +1,8 @@
 project('httpknock', 'c')
 
 add_project_arguments('-fPIE', language : 'c')
-add_project_arguments('-fstack-protector-all', language : 'c')
-add_project_arguments('-D_FORTIFY_SOURCE=2', language : 'c')
+add_project_arguments('-fhardened', language: 'c')
+add_project_arguments('-Whardened', language: 'c')
 add_project_arguments('-O2', language : 'c')
 link_args = '-Wl,-z,relro,-z,now'
 
